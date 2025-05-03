@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream House - Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --bg-light: #f5f9ff;
+            --text-light: #000;
+            --primary-light: #007bff;
+            --section-bg-1: #f5f9ff;
+            --section-bg-2: #e0f7fa;
+            --section-bg-3: #fff3e0;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            color: white;
+            margin: 0;
+        }
+
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar li a {
+            text-decoration: none;
+            font-weight: bold;
+            color: white;
+            transition: color 0.3s;
+        }
+
+        .navbar li a:hover {
+            color: #f9f9f9;
+        }
+
+        .section {
+            height: 90vh;
+            width: 100vw;
+            padding: 3rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            scroll-snap-align: start;
+            box-sizing: border-box;
+        }
+
+        .section:nth-of-type(1) {
+            background-color: var(--section-bg-1);
+        }
+
+        .section:nth-of-type(2) {
+            background-color: var(--section-bg-2);
+        }
+
+        .section:nth-of-type(3) {
+            background-color: var(--section-bg-3);
+        }
+
+        .section img {
+            max-width: 500px;
+            border-radius: 12px;
+        }
+
+        .section-text {
+            max-width: 600px;
+        }
+
+        .section h2 {
+            font-size: 2rem;
+            color: var(--primary-light);
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            background-color: var(--primary-light);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        footer {
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            color: white;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        footer .socials {
+            margin: 1rem 0;
+        }
+
+        footer .socials a {
+            color: white;
+            margin: 0 10px;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        footer .socials a:hover {
+            color: #dcdcdc;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <h1>Dream House</h1>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/predict_price">Predict Price</a></li>
+            <li><a href="/analyze">Analysis</a></li>
+            <li><a href="/compare">Compare</a></li>
+        </ul>
+    </nav>
+
+    <section class="section">
+        <div class="section-text">
+            <h2>Want to know price of your dream house?</h2>
+            <p>Discover how much your future home might cost using our smart prediction engine. Accurate, fast and reliable.</p>
+            <a href="/predict_price"><button class="btn">Predict Price</button></a>
+        </div>
+        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c" alt="Modern Home">
+    </section>
+
+    <section class="section">
+        <img src="https://media.istockphoto.com/id/506903162/photo/luxurious-villa-with-pool.jpg?s=612x612&w=0&k=20&c=Ek2P0DQ9nHQero4m9mdDyCVMVq3TLnXigxNPcZbgX2E=" alt="Modern Analysis">
+        <div class="section-text">
+            <h2>Analyze the price of your dream house</h2>
+            <p>Explore trends and visualize pricing insights of various properties. Make informed decisions with our data analysis.</p>
+            <a href="/analyze"><button class="btn">Analyze</button></a>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-text">
+            <h2>Compare and buy best house</h2>
+            <p>Compare different properties side-by-side to find the one that suits your needs and budget best.</p>
+            <a href="/compare"><button class="btn">Compare</button></a>
+        </div>
+        <img src="https://th.bing.com/th/id/OIP.Py_RZFlMe9VmVHC3lagXywHaE8?w=291&h=194&c=7&r=0&o=5&dpr=1.5&pid=1.7" alt="Compare Homes">
+    </section>
+
+    <footer>
+        <h3>Dream House</h3>
+        <p>Email: dreamhouse@example.com | Contact: +91 98765 43210</p>
+        <div class="socials">
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+        <p>&copy; 2025 Dream House. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>

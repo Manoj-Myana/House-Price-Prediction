@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>House Price Predictor</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f5f9ff;
+      color: #222;
+    }
+    nav {
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #fff;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 2rem;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: #fff;
+      font-weight: bold;
+    }
+    .main-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      flex-wrap: wrap;
+      padding: 3rem;
+      gap: 2rem;
+    }
+    .form-section, .output-section {
+      flex: 1;
+      min-width: 300px;
+      padding: 2rem;
+      box-sizing: border-box;
+      border-radius: 10px;
+    }
+    .form-section {
+      background-color: #ffffff;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+    .form-section h2 {
+      color: #007bff;
+      margin-bottom: 1rem;
+    }
+    .form-section label {
+      display: block;
+      margin: 1rem 0 0.5rem;
+      font-weight: bold;
+    }
+    .form-section input,
+    .form-section select {
+      width: 100%;
+      padding: 0.6rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    #location-suggestions {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      max-height: 150px;
+      overflow-y: auto;
+      width: calc(100% - 4rem);
+      z-index: 999;
+      display: none; /* Hide initially */
+    }
+    #location-suggestions div {
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+    #location-suggestions div:hover {
+      background-color: #f0f0f0;
+    }
+    .form-section button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .form-section button:hover {
+      background-color: #0056b3;
+    }
+    .output-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #e6f2ff;
+      color: #003366;
+      font-size: 1.4rem;
+      font-weight: 500;
+      text-align: center;
+      min-height: 370px;
+    }
+    #output p {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 500;
+    }
+    #output span {
+      display: block;
+      margin-top: 1.2rem;
+      font-size: 2.5rem;
+      color: #1e90ff;
+      font-weight: 800;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <div class="logo">Dream House</div>
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/predict_price">Predict Price</a></li>
+      <li><a href="/analyze">Analysis</a></li>
+      <li><a href="/compare">Compare</a></li>
+    </ul>
+  </nav>
+
+  <div class="main-container">
+    <div class="form-section">
+      <h2>Enter House Details</h2>
+      <form id="predictionForm">
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" placeholder="Start typing a location..." autocomplete="off">
+        <div id="location-suggestions"></div>
+
+        <label for="sqft">Total Square Feet:</label>
+        <input type="number" id="sqft" name="sqft" placeholder="Must be greater than or equal to 1000" required>
+
+        <label for="bath">Number of Bathrooms:</label>
+        <select id="bath" name="bath">
+          {% for i in range(1, 11) %}
+          <option value="{{ i }}">{{ i }}</option>
+          {% endfor %}
+        </select>
+
+        <label for="bhk">Number of Bedrooms (BHK):</label>
+        <select id="bhk" name="bhk">
+          {% for i in range(1, 11) %}
+          <option value="{{ i }}">{{ i }}</option>
+          {% endfor %}
+        </select>
+
+        <button type="submit">Estimate Price</button>
+      </form>
+    </div>
+
+    <div class="output-section" id="output">
+      Enter the values and know the price of your dream house
+    </div>
+  </div>
+
+  <script>
+    let allLocations = [];
+
+    async function loadLocations() {
+      const res = await fetch("/get_location_names");
+      const data = await res.json();
+      allLocations = data.locations;
+    }
+
+    function showSuggestions(locations) {
+      const suggestionsBox = document.getElementById("location-suggestions");
+      suggestionsBox.innerHTML = "";
+      if (locations.length > 0) {
+        suggestionsBox.style.display = "block";
+      } else {
+        suggestionsBox.style.display = "none";
+      }
+      locations.forEach(loc => {
+        const div = document.createElement("div");
+        div.innerHTML = `<strong>${loc}</strong>`;
+        div.addEventListener("click", function () {
+          document.getElementById("location").value = loc;
+          suggestionsBox.style.display = "none";
+        });
+        suggestionsBox.appendChild(div);
+      });
+    }
+
+    document.getElementById("location").addEventListener("focus", function () {
+      showSuggestions(allLocations);  // Show all on click
+    });
+
+    document.getElementById("location").addEventListener("input", function () {
+      const input = this.value.toLowerCase();
+      const matches = allLocations.filter(loc => loc.toLowerCase().startsWith(input));
+      showSuggestions(matches);
+    });
+
+    function formatIndianCurrency(x) {
+      const amount = x.toString().split('.');
+      const lastThree = amount[0].substring(amount[0].length - 3);
+      const otherNumbers = amount[0].substring(0, amount[0].length - 3);
+      const formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree;
+      return '₹' + formatted + (amount[1] ? '.' + amount[1] : '');
+    }
+
+    document.getElementById("predictionForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const sqft = parseFloat(document.getElementById("sqft").value);
+      if (sqft < 1000) {
+        alert("Total square feet must be at least 1000!");
+        return;
+      }
+
+      const bath = parseInt(document.getElementById("bath").value);
+      const bhk = parseInt(document.getElementById("bhk").value);
+      const location = document.getElementById("location").value;
+
+      const res = await fetch("/predict_home_price", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sqft, bath, bhk, location })
+      });
+
+      const data = await res.json();
+
+      document.getElementById("output").innerHTML = `
+        <p>The Estimated price of your dream house is:</p>
+        <span>${formatIndianCurrency(data.estimated_price)}</span>
+      `;
+    });
+
+    window.onload = loadLocations;
+  </script>
+</body>
+</html>

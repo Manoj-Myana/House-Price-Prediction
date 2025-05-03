@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Analyze House Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f5f9ff;
+    }
+    nav {
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #fff;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 2rem;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: #fff;
+      font-weight: bold;
+    }
+    .container {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .chart-box {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      position: relative;
+      transition: all 0.5s ease;
+    }
+    .chart-box.expanded {
+      width: 70%;
+      margin: auto;
+    }
+    .chart-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #0072ff;
+      cursor: pointer;
+    }
+    .chart-content {
+      display: none;
+      margin-top: 1rem;
+    }
+    .chart-box.expanded .chart-content {
+      display: block;
+    }
+    .dropdown-icon {
+      font-size: 1.5rem;
+      transition: transform 0.3s;
+    }
+    .chart-box.expanded .dropdown-icon {
+      transform: rotate(180deg);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    select {
+      margin-bottom: 10px;
+      padding: 0.4rem;
+      font-size: 1rem;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Dream House</div>
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/predict_price">Predict Price</a></li>
+      <li><a href="/analyze">Analysis</a></li>
+      <li><a href="/compare">Compare</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+
+    <div class="chart-box">
+      <div class="chart-title" onclick="toggleChart(this)">
+        Average Price per Location
+        <span class="dropdown-icon">&#9660;</span>
+      </div>
+      <div class="chart-content">
+        <canvas id="priceLocationChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-title" onclick="toggleChart(this)">
+        Compare Price Based on BHK
+        <span class="dropdown-icon">&#9660;</span>
+      </div>
+      <div class="chart-content">
+        <label>Select Location 1:</label>
+        <select onchange="updateBhkChart()" id="bhk-loc-1"></select>
+        <label>Select Location 2:</label>
+        <select onchange="updateBhkChart()" id="bhk-loc-2"></select>
+        <label>Select Location 3:</label>
+        <select onchange="updateBhkChart()" id="bhk-loc-3"></select>
+        <canvas id="bhkLineChart" height="100"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-title" onclick="toggleChart(this)">
+        Compare Price Based on Bathrooms
+        <span class="dropdown-icon">&#9660;</span>
+      </div>
+      <div class="chart-content">
+        <label>Select Location 1:</label>
+        <select onchange="updateBathChart()" id="bath-loc-1"></select>
+        <label>Select Location 2:</label>
+        <select onchange="updateBathChart()" id="bath-loc-2"></select>
+        <label>Select Location 3:</label>
+        <select onchange="updateBathChart()" id="bath-loc-3"></select>
+        <canvas id="bathLineChart" height="100"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-title" onclick="toggleChart(this)">
+        BHK Distribution
+        <span class="dropdown-icon">&#9660;</span>
+      </div>
+      <div class="chart-content">
+        <canvas id="bhkDistributionChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-title" onclick="toggleChart(this)">
+        Price vs Square Feet
+        <span class="dropdown-icon">&#9660;</span>
+      </div>
+      <div class="chart-content">
+        <canvas id="priceSqftChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-title" onclick="toggleChart(this)">
+        Top 10 Costliest Locations
+        <span class="dropdown-icon">&#9660;</span>
+      </div>
+      <div class="chart-content">
+        <canvas id="topLocationsChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function toggleChart(titleElement) {
+      const box = titleElement.closest(".chart-box");
+      const expanded = document.querySelector('.chart-box.expanded');
+      if (expanded && expanded !== box) expanded.classList.remove('expanded');
+      box.classList.toggle('expanded');
+    }
+
+    const bhkColors = ['#007bff', '#00c6ff', '#ff9933'];
+
+    let bhkChart, bathChart;
+
+    async function populateLocations(ids, callback) {
+      const res = await fetch("/get_location_names");
+      const data = await res.json();
+      const locations = data.locations;
+
+      ids.forEach(id => {
+        const select = document.getElementById(id);
+        select.innerHTML = '<option value="">-- Select --</option>';
+        locations.forEach(loc => {
+          const opt = document.createElement("option");
+          opt.value = loc;
+          opt.textContent = loc;
+          select.appendChild(opt);
+        });
+      });
+
+      if (callback) callback();
+    }
+
+    async function updateBhkChart() {
+      const locIds = ['bhk-loc-1', 'bhk-loc-2', 'bhk-loc-3'];
+      const datasets = [];
+
+      for (let i = 0; i < locIds.length; i++) {
+        const loc = document.getElementById(locIds[i]).value;
+        if (loc) {
+          const res = await fetch("/compare_bhk_prices", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ location: loc })
+          });
+          const data = await res.json();
+
+          datasets.push({
+            label: loc,
+            data: data.data.map(item => ({ x: item.bhk, y: item.price })),
+            borderColor: bhkColors[i],
+            fill: false,
+            tension: 0.3
+          });
+        }
+      }
+
+      const ctx = document.getElementById("bhkLineChart").getContext("2d");
+      if (bhkChart) bhkChart.destroy();
+
+      bhkChart = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options: {
+          responsive: true,
+          scales: {
+            x: { type: 'linear', title: { display: true, text: 'BHK' }, ticks: { stepSize: 1 } },
+            y: { title: { display: true, text: 'Price (₹)' } }
+          },
+          plugins: { legend: { position: 'right' } }
+        }
+      });
+    }
+
+    async function updateBathChart() {
+      const locIds = ['bath-loc-1', 'bath-loc-2', 'bath-loc-3'];
+      const datasets = [];
+
+      for (let i = 0; i < locIds.length; i++) {
+        const loc = document.getElementById(locIds[i]).value;
+        if (loc) {
+          const res = await fetch("/compare_bath_prices", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ location: loc })
+          });
+          const data = await res.json();
+
+          datasets.push({
+            label: loc,
+            data: data.data.map(item => ({ x: item.bath, y: item.price })),
+            borderColor: bhkColors[i],
+            fill: false,
+            tension: 0.3
+          });
+        }
+      }
+
+      const ctx = document.getElementById("bathLineChart").getContext("2d");
+      if (bathChart) bathChart.destroy();
+
+      bathChart = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options: {
+          responsive: true,
+          scales: {
+            x: { type: 'linear', title: { display: true, text: 'Bathrooms' }, ticks: { stepSize: 1 } },
+            y: { title: { display: true, text: 'Price (₹)' } }
+          },
+          plugins: { legend: { position: 'right' } }
+        }
+      });
+    }
+
+    window.onload = () => {
+      populateLocations(['bhk-loc-1', 'bhk-loc-2', 'bhk-loc-3'], updateBhkChart);
+      populateLocations(['bath-loc-1', 'bath-loc-2', 'bath-loc-3'], updateBathChart);
+    };
+
+
+
+
+    const priceLocationCtx = document.getElementById('priceLocationChart').getContext('2d');
+new Chart(priceLocationCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Indira Nagar', 'Whitefield', 'Marathahalli', 'HSR Layout'],
+    datasets: [{
+      label: 'Avg Price per Sqft',
+      data: [15000, 8000, 7000, 10000],
+      backgroundColor: '#007bff'
+    }]
+  }
+});
+
+const bhkCtx = document.getElementById('bhkDistributionChart').getContext('2d');
+new Chart(bhkCtx, {
+  type: 'pie',
+  data: {
+    labels: ['1BHK', '2BHK', '3BHK', '4BHK'],
+    datasets: [{
+      data: [10, 40, 35, 15],
+      backgroundColor: ['#00c6ff', '#0072ff', '#66ccff', '#3399ff']
+    }]
+  }
+});
+
+const priceSqftCtx = document.getElementById('priceSqftChart').getContext('2d');
+new Chart(priceSqftCtx, {
+  type: 'scatter',
+  data: {
+    datasets: [{
+      label: 'Price vs Sqft',
+      data: [{x: 1000, y: 8000000}, {x: 1200, y: 10000000}, {x: 1500, y: 13000000}],
+      backgroundColor: '#0072ff'
+    }]
+  },
+  options: {
+    scales: {
+      x: { type: 'linear', position: 'bottom', title: { display: true, text: 'Square Feet' } },
+      y: { title: { display: true, text: 'Price (₹)' } }
+    }
+  }
+});
+
+const topLocationCtx = document.getElementById('topLocationsChart').getContext('2d');
+new Chart(topLocationCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Indira Nagar', 'Koramangala', 'HSR Layout', 'Whitefield', 'Marathahalli'],
+    datasets: [{
+      label: 'Avg Price per Sqft',
+      data: [15000, 14000, 12000, 8000, 7000],
+      backgroundColor: '#00c6ff'
+    }]
+  },
+  options: {
+    indexAxis: 'y'
+  }
+});
+
+  </script>
+</body>
+</html>
